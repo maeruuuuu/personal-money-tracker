@@ -1,0 +1,1 @@
+ALTER TABLE `wallets` ADD `status` text DEFAULT 'active' NOT NULL;

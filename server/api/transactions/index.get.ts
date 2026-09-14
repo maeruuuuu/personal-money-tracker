@@ -1,4 +1,4 @@
-import { desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 import { useDb } from '../../db/client'
 import { transactions, wallets, categories } from '../../db/schema'
 
@@ -7,7 +7,12 @@ export default defineEventHandler(async (event) => {
   const db = useDb()
 
   const walletId = query.walletId ? Number(query.walletId) : undefined
-  const whereClause = walletId ? eq(transactions.walletId, walletId) : undefined
+  const categoryId = query.categoryId ? Number(query.categoryId) : undefined
+  const conditions = [
+    walletId ? eq(transactions.walletId, walletId) : undefined,
+    categoryId ? eq(transactions.categoryId, categoryId) : undefined
+  ].filter((c) => c !== undefined)
+  const whereClause = conditions.length ? and(...conditions) : undefined
 
   const baseQuery = () =>
     db
@@ -26,7 +31,7 @@ export default defineEventHandler(async (event) => {
       })
       .from(transactions)
       .innerJoin(wallets, eq(transactions.walletId, wallets.id))
-      .innerJoin(categories, eq(transactions.categoryId, categories.id))
+      .leftJoin(categories, eq(transactions.categoryId, categories.id))
       .where(whereClause)
       .orderBy(desc(transactions.date), desc(transactions.id))
 

@@ -1,35 +1,26 @@
 <script setup lang="ts">
-import type { Transaction } from '~/stores/transactions'
+const route = useRoute()
+const walletId = Number(route.params.id)
 
-const transactionsStore = useTransactionsStore()
-const transfersStore = useTransfersStore()
 const walletsStore = useWalletsStore()
 const categoriesStore = useCategoriesStore()
+const transactionsStore = useTransactionsStore()
+const transfersStore = useTransfersStore()
 
 const PAGE_SIZE = 20
 
 await Promise.all([
-  transactionsStore.fetchPage(1, PAGE_SIZE, {}),
-  transfersStore.fetchPage(1, PAGE_SIZE, {}),
   walletsStore.fetch(),
-  categoriesStore.fetch()
+  categoriesStore.fetch(),
+  transactionsStore.fetchPage(1, PAGE_SIZE, { walletId }),
+  transfersStore.fetchPage(1, PAGE_SIZE, { walletId })
 ])
 
-const activeTab = ref<'transaksi' | 'transfer'>('transaksi')
+const wallet = computed(() => walletsStore.items.find((w) => w.id === walletId))
 
-const showModal = ref(false)
-const editingTransaction = ref<Transaction | null>(null)
+const showTransactionModal = ref(false)
 const showTransferModal = ref(false)
-
-function openCreate() {
-  editingTransaction.value = null
-  showModal.value = true
-}
-
-function openEdit(tx: Transaction) {
-  editingTransaction.value = tx
-  showModal.value = true
-}
+const activeWalletCount = computed(() => walletsStore.items.filter((w) => w.status === 'active').length)
 
 async function remove(id: number) {
   if (!confirm('Hapus transaksi ini?')) return
@@ -60,68 +51,45 @@ function goToTransferPage(page: number) {
 
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between flex-wrap gap-3">
-      <h1 class="text-xl font-black uppercase">Transaksi</h1>
-      <div class="flex gap-3">
-        <NuxtLink to="/transactions/bulk">
-          <BrutalButton variant="ghost">+ Bulk Insert</BrutalButton>
-        </NuxtLink>
-        <BrutalButton
-          v-if="activeTab === 'transaksi'"
-          :disabled="!walletsStore.items.length || !categoriesStore.items.length"
-          @click="openCreate"
-        >
-          + Tambah Transaksi
-        </BrutalButton>
-        <BrutalButton v-else :disabled="walletsStore.items.length < 2" @click="showTransferModal = true">
-          + Transfer
-        </BrutalButton>
+    <NuxtLink to="/wallets" class="text-xs font-bold uppercase underline">← Kembali ke Wallets</NuxtLink>
+
+    <div v-if="wallet" class="flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-black uppercase">{{ wallet.name }}</h1>
+        <p class="text-xs font-bold uppercase mt-1">{{ wallet.type }} · {{ wallet.status }}</p>
       </div>
+      <p class="text-2xl font-black">{{ formatCurrency(wallet.balance) }}</p>
+    </div>
+    <p v-else class="text-sm">Wallet tidak ditemukan.</p>
+
+    <div v-if="wallet" class="flex flex-wrap gap-3">
+      <BrutalButton :disabled="!categoriesStore.items.length" @click="showTransactionModal = true">
+        + Tambah Transaksi
+      </BrutalButton>
+      <BrutalButton :disabled="activeWalletCount < 2" @click="showTransferModal = true">+ Transfer</BrutalButton>
     </div>
 
-    <div class="flex gap-2">
-      <button
-        class="brutal-border brutal-shadow-sm brutal-press px-4 py-2 text-sm font-bold uppercase"
-        :class="activeTab === 'transaksi' ? 'bg-brutal-yellow' : 'bg-brutal-surface'"
-        @click="activeTab = 'transaksi'"
-      >
-        Transaksi
-      </button>
-      <button
-        class="brutal-border brutal-shadow-sm brutal-press px-4 py-2 text-sm font-bold uppercase"
-        :class="activeTab === 'transfer' ? 'bg-brutal-yellow' : 'bg-brutal-surface'"
-        @click="activeTab = 'transfer'"
-      >
-        Transfer
-      </button>
-    </div>
-
-    <template v-if="activeTab === 'transaksi'">
-      <p v-if="!walletsStore.items.length" class="text-sm">Buat wallet dulu sebelum mencatat transaksi.</p>
-      <p v-else-if="!categoriesStore.items.length" class="text-sm">Buat kategori dulu sebelum mencatat transaksi.</p>
-
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <BrutalCard>
+      <h2 class="font-black uppercase mb-3">Riwayat Transaksi</h2>
       <div class="space-y-2">
         <BrutalCard v-for="tx in transactionsStore.pageItems" :key="tx.id" class="flex items-center justify-between">
           <div>
             <BrutalBadge v-if="tx.type === 'correction'" color="#b592ff">Koreksi</BrutalBadge>
             <BrutalBadge v-else :color="tx.categoryColor">{{ tx.categoryName }}</BrutalBadge>
-            <p class="mt-1 text-sm font-bold">{{ tx.walletName }}</p>
-            <p class="text-xs">{{ formatDate(tx.date) }} · {{ tx.note || '-' }}</p>
+            <p class="text-xs mt-1">{{ formatDate(tx.date) }} · {{ tx.note || '-' }}</p>
           </div>
           <div class="text-right">
             <p class="font-black" :class="tx.amount >= 0 && tx.type !== 'expense' ? 'text-green-700' : 'text-brutal-red'">
               {{ tx.type === 'expense' || tx.amount < 0 ? '-' : '+' }}{{ formatCurrency(Math.abs(tx.amount)) }}
             </p>
-            <div class="flex gap-3 justify-end mt-1">
-              <button v-if="tx.type !== 'correction'" class="text-xs font-bold uppercase underline" @click="openEdit(tx)">Edit</button>
-              <button class="text-xs font-bold uppercase underline" @click="remove(tx.id)">Hapus</button>
-            </div>
+            <button class="text-xs font-bold uppercase underline mt-1" @click="remove(tx.id)">Hapus</button>
           </div>
         </BrutalCard>
-        <p v-if="!transactionsStore.pageItems.length" class="text-sm">Belum ada transaksi.</p>
+        <p v-if="!transactionsStore.pageItems.length" class="text-sm">Belum ada transaksi untuk wallet ini.</p>
       </div>
 
-      <div v-if="transactionsStore.pageTotalPages > 1" class="flex items-center justify-between gap-3">
+      <div v-if="transactionsStore.pageTotalPages > 1" class="flex items-center justify-between gap-3 mt-4">
         <BrutalButton
           variant="ghost"
           :disabled="transactionsStore.pageNumber <= 1"
@@ -141,26 +109,29 @@ function goToTransferPage(page: number) {
           Berikutnya →
         </BrutalButton>
       </div>
-    </template>
+    </BrutalCard>
 
-    <template v-else>
-      <p v-if="walletsStore.items.length < 2" class="text-sm">Minimal butuh 2 wallet untuk transfer.</p>
-
+    <BrutalCard>
+      <h2 class="font-black uppercase mb-3">Riwayat Transfer</h2>
       <div class="space-y-2">
         <BrutalCard v-for="t in transfersStore.pageItems" :key="t.id" class="flex items-center justify-between">
           <div>
-            <p class="font-bold">{{ t.fromWalletName }} → {{ t.toWalletName }}</p>
-            <p class="text-xs">{{ formatDate(t.date) }} · {{ t.note || '-' }}</p>
+            <p class="font-bold text-sm">
+              {{ t.fromWalletId === walletId ? `→ ${t.toWalletName}` : `${t.fromWalletName} →` }}
+            </p>
+            <p class="text-xs mt-1">{{ formatDate(t.date) }} · {{ t.note || '-' }}</p>
           </div>
           <div class="text-right">
-            <p class="font-black">{{ formatCurrency(t.amount) }}</p>
+            <p class="font-black" :class="t.toWalletId === walletId ? 'text-green-700' : 'text-brutal-red'">
+              {{ t.toWalletId === walletId ? '+' : '-' }}{{ formatCurrency(t.amount) }}
+            </p>
             <button class="text-xs font-bold uppercase underline mt-1" @click="removeTransfer(t.id)">Hapus</button>
           </div>
         </BrutalCard>
-        <p v-if="!transfersStore.pageItems.length" class="text-sm">Belum ada transfer.</p>
+        <p v-if="!transfersStore.pageItems.length" class="text-sm">Belum ada transfer untuk wallet ini.</p>
       </div>
 
-      <div v-if="transfersStore.pageTotalPages > 1" class="flex items-center justify-between gap-3">
+      <div v-if="transfersStore.pageTotalPages > 1" class="flex items-center justify-between gap-3 mt-4">
         <BrutalButton
           variant="ghost"
           :disabled="transfersStore.pageNumber <= 1"
@@ -180,9 +151,10 @@ function goToTransferPage(page: number) {
           Berikutnya →
         </BrutalButton>
       </div>
-    </template>
+    </BrutalCard>
+    </div>
 
-    <TransactionFormModal v-if="showModal" :transaction="editingTransaction" @close="showModal = false" />
-    <TransferFormModal v-if="showTransferModal" @close="showTransferModal = false" />
+    <TransactionFormModal v-if="showTransactionModal" :wallet-id="walletId" @close="showTransactionModal = false" />
+    <TransferFormModal v-if="showTransferModal" :wallet-id="walletId" @close="showTransferModal = false" />
   </div>
 </template>

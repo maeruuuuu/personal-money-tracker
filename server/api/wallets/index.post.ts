@@ -5,8 +5,9 @@ import { wallets } from '../../db/schema'
 const bodySchema = z.object({
   name: z.string().min(1).max(60),
   type: z.enum(['cash', 'bank', 'ewallet', 'other']).default('cash'),
-  initialBalance: z.number().int().default(0),
-  color: z.string().min(1).default('#4d96ff')
+  initialBalance: z.number().default(0),
+  color: z.string().min(1).default('#4d96ff'),
+  status: z.enum(['active', 'inactive']).default('active')
 })
 
 export default defineEventHandler(async (event) => {

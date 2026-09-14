@@ -6,7 +6,8 @@ import { categories } from '../../db/schema'
 const bodySchema = z.object({
   name: z.string().min(1).max(60).optional(),
   type: z.enum(['income', 'expense']).optional(),
-  color: z.string().min(1).optional()
+  color: z.string().min(1).optional(),
+  status: z.enum(['active', 'inactive']).optional()
 })
 
 export default defineEventHandler(async (event) => {

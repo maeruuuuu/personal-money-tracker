@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const props = defineProps<{ walletId?: number }>()
+
 const walletsStore = useWalletsStore()
 const transfersStore = useTransfersStore()
 
@@ -6,15 +8,19 @@ const emit = defineEmits<{ close: [] }>()
 
 const error = ref('')
 
+const activeWallets = computed(() => walletsStore.items.filter((w) => w.status === 'active'))
+const walletOptions = computed(() => activeWallets.value.map((w) => ({ label: w.name, value: w.id })))
+
+const initialFromWalletId = props.walletId ?? activeWallets.value[0]?.id ?? 0
+
 const form = reactive({
-  fromWalletId: walletsStore.items[0]?.id ?? 0,
-  toWalletId: walletsStore.items[1]?.id ?? walletsStore.items[0]?.id ?? 0,
+  fromWalletId: initialFromWalletId,
+  toWalletId:
+    activeWallets.value.find((w) => w.id !== initialFromWalletId)?.id ?? activeWallets.value[0]?.id ?? 0,
   amount: 0,
   note: '',
   date: todayInputDate()
 })
-
-const walletOptions = computed(() => walletsStore.items.map((w) => ({ label: w.name, value: w.id })))
 
 async function submit() {
   error.value = ''

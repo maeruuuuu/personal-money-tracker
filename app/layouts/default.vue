@@ -6,7 +6,6 @@ const navItems = [
   { to: '/wallets', label: 'Wallets' },
   { to: '/categories', label: 'Kategori' },
   { to: '/transactions', label: 'Transaksi' },
-  { to: '/transfers', label: 'Transfer' },
   { to: '/report', label: 'Laporan' }
 ]
 

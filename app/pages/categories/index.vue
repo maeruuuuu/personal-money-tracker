@@ -11,10 +11,16 @@ const editing = ref<Category | null>(null)
 const form = reactive({
   name: '',
   type: 'expense' as 'income' | 'expense',
-  color: '#ffd93d'
+  color: '#ffd93d',
+  status: 'active'
 })
 
 const colorOptions = ['#4d96ff', '#6bcf7f', '#ffd93d', '#ff6b9d', '#ff5c5c', '#b592ff']
+
+const statusOptions = [
+  { label: 'Active', value: 'active' },
+  { label: 'Inactive', value: 'inactive' }
+]
 
 const visibleCategories = computed(() => (activeTab.value === 'income' ? store.income : store.expense))
 
@@ -23,6 +29,7 @@ function openCreate() {
   form.name = ''
   form.type = activeTab.value
   form.color = '#ffd93d'
+  form.status = 'active'
   showModal.value = true
 }
 
@@ -31,6 +38,7 @@ function openEdit(category: Category) {
   form.name = category.name
   form.type = category.type
   form.color = category.color
+  form.status = category.status
   showModal.value = true
 }
 
@@ -78,12 +86,18 @@ async function remove(category: Category) {
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <BrutalCard v-for="c in visibleCategories" :key="c.id">
-        <div class="flex items-center gap-2">
-          <span class="w-4 h-4 brutal-border" :style="{ backgroundColor: c.color }" />
-          <p class="font-bold">{{ c.name }}</p>
+      <BrutalCard v-for="c in visibleCategories" :key="c.id" :class="c.status === 'inactive' && 'opacity-50'">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 brutal-border" :style="{ backgroundColor: c.color }" />
+            <p class="font-bold">{{ c.name }}</p>
+          </div>
+          <BrutalBadge v-if="c.status === 'inactive'" color="#111111" class="!text-white">Nonaktif</BrutalBadge>
         </div>
-        <div class="flex gap-2 mt-4">
+        <div class="flex gap-2 mt-4 flex-wrap">
+          <NuxtLink :to="`/categories/${c.id}`">
+            <BrutalButton variant="ghost">Detail</BrutalButton>
+          </NuxtLink>
           <BrutalButton variant="ghost" @click="openEdit(c)">Edit</BrutalButton>
           <BrutalButton variant="danger" @click="remove(c)">Hapus</BrutalButton>
         </div>
@@ -102,6 +116,7 @@ async function remove(category: Category) {
             { label: 'Pemasukan', value: 'income' }
           ]"
         />
+        <BrutalSelect v-model="form.status" label="Status" :options="statusOptions" />
         <div>
           <span class="block text-xs font-bold uppercase mb-1">Warna</span>
           <div class="flex gap-2">

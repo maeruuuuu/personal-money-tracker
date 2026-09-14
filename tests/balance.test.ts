@@ -42,4 +42,20 @@ describe('computeWalletBalance', () => {
     )
     expect(balance).toBe(650000)
   })
+
+  it('applies a correction as a signed delta, positive or negative', () => {
+    const higher = computeWalletBalance(
+      { id: 1, initialBalance: 100000 },
+      [{ walletId: 1, type: 'correction', amount: 5000 }],
+      []
+    )
+    expect(higher).toBe(105000)
+
+    const lower = computeWalletBalance(
+      { id: 1, initialBalance: 100000 },
+      [{ walletId: 1, type: 'correction', amount: -20000 }],
+      []
+    )
+    expect(lower).toBe(80000)
+  })
 })

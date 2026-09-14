@@ -4,6 +4,7 @@ export interface Wallet {
   type: 'cash' | 'bank' | 'ewallet' | 'other'
   initialBalance: number
   color: string
+  status: 'active' | 'inactive'
   createdAt: string
   balance: number
 }
@@ -25,11 +26,14 @@ export const useWalletsStore = defineStore('wallets', {
         this.loading = false
       }
     },
-    async create(payload: { name: string; type: string; initialBalance: number; color: string }) {
+    async create(payload: { name: string; type: string; initialBalance: number; color: string; status: string }) {
       await useApi()('/api/wallets', { method: 'POST', body: payload })
       await this.fetch()
     },
-    async update(id: number, payload: Partial<{ name: string; type: string; initialBalance: number; color: string }>) {
+    async update(
+      id: number,
+      payload: Partial<{ name: string; type: string; initialBalance: number; color: string; status: string }>
+    ) {
       await useApi()(`/api/wallets/${id}`, { method: 'PATCH', body: payload })
       await this.fetch()
     },

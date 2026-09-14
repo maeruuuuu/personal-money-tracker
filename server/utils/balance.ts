@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, like, sql } from 'drizzle-orm'
 import { useDb } from '../db/client'
 import { wallets, transactions, transfers } from '../db/schema'
 
@@ -9,7 +9,7 @@ interface WalletLike {
 
 interface TransactionLike {
   walletId: number
-  type: 'income' | 'expense'
+  type: 'income' | 'expense' | 'correction'
   amount: number
 }
 
@@ -28,7 +28,9 @@ export function computeWalletBalance(
 
   for (const tx of allTransactions) {
     if (tx.walletId !== wallet.id) continue
-    balance += tx.type === 'income' ? tx.amount : -tx.amount
+    if (tx.type === 'income') balance += tx.amount
+    else if (tx.type === 'expense') balance -= tx.amount
+    else balance += tx.amount
   }
 
   for (const tr of allTransfers) {
@@ -48,10 +50,12 @@ export async function getWalletsWithBalance() {
     db.select().from(transfers)
   ])
 
-  return allWallets.map((wallet) => ({
-    ...wallet,
-    balance: computeWalletBalance(wallet, allTransactions, allTransfers)
-  }))
+  return allWallets
+    .map((wallet) => ({
+      ...wallet,
+      balance: computeWalletBalance(wallet, allTransactions, allTransfers)
+    }))
+    .sort((a, b) => Number(a.status === 'inactive') - Number(b.status === 'inactive'))
 }
 
 export async function getWalletBalance(walletId: number) {
@@ -62,7 +66,7 @@ export async function getWalletBalance(walletId: number) {
 export async function getSummary() {
   const db = useDb()
 
-  const [[{ totalIncome }], [{ totalExpense }], [{ initialSum }]] = await Promise.all([
+  const [[{ totalIncome }], [{ totalExpense }], [{ correctionSum }], [{ initialSum }]] = await Promise.all([
     db
       .select({ totalIncome: sql<number>`coalesce(sum(${transactions.amount}), 0)` })
       .from(transactions)
@@ -71,12 +75,37 @@ export async function getSummary() {
       .select({ totalExpense: sql<number>`coalesce(sum(${transactions.amount}), 0)` })
       .from(transactions)
       .where(eq(transactions.type, 'expense')),
+    db
+      .select({ correctionSum: sql<number>`coalesce(sum(${transactions.amount}), 0)` })
+      .from(transactions)
+      .where(eq(transactions.type, 'correction')),
     db.select({ initialSum: sql<number>`coalesce(sum(${wallets.initialBalance}), 0)` }).from(wallets)
   ])
 
   return {
     totalIncome: Number(totalIncome),
     totalExpense: Number(totalExpense),
-    totalBalance: Number(initialSum) + Number(totalIncome) - Number(totalExpense)
+    totalBalance: Number(initialSum) + Number(totalIncome) - Number(totalExpense) + Number(correctionSum)
+  }
+}
+
+export async function getMonthlySummary(month: string) {
+  const db = useDb()
+
+  const [[{ totalIncome }], [{ totalExpense }]] = await Promise.all([
+    db
+      .select({ totalIncome: sql<number>`coalesce(sum(${transactions.amount}), 0)` })
+      .from(transactions)
+      .where(and(eq(transactions.type, 'income'), like(transactions.date, `${month}-%`))),
+    db
+      .select({ totalExpense: sql<number>`coalesce(sum(${transactions.amount}), 0)` })
+      .from(transactions)
+      .where(and(eq(transactions.type, 'expense'), like(transactions.date, `${month}-%`)))
+  ])
+
+  return {
+    totalIncome: Number(totalIncome),
+    totalExpense: Number(totalExpense),
+    net: Number(totalIncome) - Number(totalExpense)
   }
 }

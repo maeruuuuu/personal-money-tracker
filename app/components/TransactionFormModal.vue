@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Transaction } from '~/stores/transactions'
 
-const props = defineProps<{ transaction?: Transaction | null }>()
+const props = defineProps<{ transaction?: Transaction | null; walletId?: number }>()
 const emit = defineEmits<{ close: [] }>()
 
 const walletsStore = useWalletsStore()
@@ -9,23 +9,33 @@ const categoriesStore = useCategoriesStore()
 const transactionsStore = useTransactionsStore()
 
 const isEditing = computed(() => Boolean(props.transaction))
+const presetWalletId = computed(() => props.transaction?.walletId ?? props.walletId)
+
+const activeWallets = computed(() => walletsStore.items.filter((w) => w.status === 'active'))
 
 const form = reactive({
   type: props.transaction?.type ?? ('expense' as 'income' | 'expense'),
-  walletId: props.transaction?.walletId ?? walletsStore.items[0]?.id ?? 0,
-  categoryId: props.transaction?.categoryId ?? categoriesStore.expense[0]?.id ?? 0,
+  walletId: presetWalletId.value ?? activeWallets.value[0]?.id ?? 0,
+  categoryId: props.transaction?.categoryId ?? categoriesStore.expense.find((c) => c.status === 'active')?.id ?? 0,
   amount: props.transaction?.amount ?? 0,
   note: props.transaction?.note ?? '',
   date: props.transaction?.date ?? todayInputDate()
 })
 
-const walletOptions = computed(() => walletsStore.items.map((w) => ({ label: w.name, value: w.id })))
-const categoryOptions = computed(() =>
-  (form.type === 'income' ? categoriesStore.income : categoriesStore.expense).map((c) => ({
-    label: c.name,
-    value: c.id
-  }))
-)
+const walletOptions = computed(() => {
+  const current = walletsStore.items.find((w) => w.id === presetWalletId.value)
+  const list =
+    current && current.status === 'inactive' ? [...activeWallets.value, current] : activeWallets.value
+  return list.map((w) => ({ label: w.name, value: w.id }))
+})
+
+const categoryOptions = computed(() => {
+  const all = form.type === 'income' ? categoriesStore.income : categoriesStore.expense
+  const active = all.filter((c) => c.status === 'active')
+  const current = all.find((c) => c.id === props.transaction?.categoryId)
+  const list = current && current.status === 'inactive' ? [...active, current] : active
+  return list.map((c) => ({ label: c.name, value: c.id }))
+})
 
 watch(
   () => form.type,

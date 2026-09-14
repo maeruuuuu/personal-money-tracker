@@ -3,6 +3,7 @@ export interface Category {
   name: string
   type: 'income' | 'expense'
   color: string
+  status: 'active' | 'inactive'
   createdAt: string
 }
 
@@ -24,11 +25,14 @@ export const useCategoriesStore = defineStore('categories', {
         this.loading = false
       }
     },
-    async create(payload: { name: string; type: 'income' | 'expense'; color: string }) {
+    async create(payload: { name: string; type: 'income' | 'expense'; color: string; status: string }) {
       await useApi()('/api/categories', { method: 'POST', body: payload })
       await this.fetch()
     },
-    async update(id: number, payload: Partial<{ name: string; type: 'income' | 'expense'; color: string }>) {
+    async update(
+      id: number,
+      payload: Partial<{ name: string; type: 'income' | 'expense'; color: string; status: string }>
+    ) {
       await useApi()(`/api/categories/${id}`, { method: 'PATCH', body: payload })
       await this.fetch()
     },

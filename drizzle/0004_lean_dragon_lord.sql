@@ -1,0 +1,1 @@
+ALTER TABLE `categories` ADD `status` text DEFAULT 'active' NOT NULL;
