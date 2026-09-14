@@ -35,8 +35,8 @@ function goToPage(page: number) {
     </div>
     <p v-else class="text-sm">Kategori tidak ditemukan.</p>
 
-    <BrutalCard>
-      <h2 class="font-black uppercase mb-3">Riwayat Transaksi</h2>
+    <div class="space-y-3">
+      <h2 class="font-black uppercase">Riwayat Transaksi</h2>
       <div class="space-y-2">
         <BrutalCard v-for="tx in transactionsStore.pageItems" :key="tx.id" class="flex items-center justify-between">
           <div>
@@ -53,7 +53,7 @@ function goToPage(page: number) {
         <p v-if="!transactionsStore.pageItems.length" class="text-sm">Belum ada transaksi untuk kategori ini.</p>
       </div>
 
-      <div v-if="transactionsStore.pageTotalPages > 1" class="flex items-center justify-between gap-3 mt-4">
+      <div v-if="transactionsStore.pageTotalPages > 1" class="flex items-center justify-between gap-3">
         <BrutalButton
           variant="ghost"
           :disabled="transactionsStore.pageNumber <= 1"
@@ -73,6 +73,6 @@ function goToPage(page: number) {
           Berikutnya →
         </BrutalButton>
       </div>
-    </BrutalCard>
+    </div>
   </div>
 </template>

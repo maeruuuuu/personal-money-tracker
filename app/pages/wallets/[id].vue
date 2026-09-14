@@ -70,88 +70,88 @@ function goToTransferPage(page: number) {
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <BrutalCard>
-      <h2 class="font-black uppercase mb-3">Riwayat Transaksi</h2>
-      <div class="space-y-2">
-        <BrutalCard v-for="tx in transactionsStore.pageItems" :key="tx.id" class="flex items-center justify-between">
-          <div>
-            <BrutalBadge v-if="tx.type === 'correction'" color="#b592ff">Koreksi</BrutalBadge>
-            <BrutalBadge v-else :color="tx.categoryColor">{{ tx.categoryName }}</BrutalBadge>
-            <p class="text-xs mt-1">{{ formatDate(tx.date) }} · {{ tx.note || '-' }}</p>
-          </div>
-          <div class="text-right">
-            <p class="font-black" :class="tx.amount >= 0 && tx.type !== 'expense' ? 'text-green-700' : 'text-brutal-red'">
-              {{ tx.type === 'expense' || tx.amount < 0 ? '-' : '+' }}{{ formatCurrency(Math.abs(tx.amount)) }}
-            </p>
-            <button class="text-xs font-bold uppercase underline mt-1" @click="remove(tx.id)">Hapus</button>
-          </div>
-        </BrutalCard>
-        <p v-if="!transactionsStore.pageItems.length" class="text-sm">Belum ada transaksi untuk wallet ini.</p>
+      <div class="space-y-3">
+        <h2 class="font-black uppercase">Riwayat Transaksi</h2>
+        <div class="space-y-2">
+          <BrutalCard v-for="tx in transactionsStore.pageItems" :key="tx.id" class="flex items-center justify-between">
+            <div>
+              <BrutalBadge v-if="tx.type === 'correction'" color="#b592ff">Koreksi</BrutalBadge>
+              <BrutalBadge v-else :color="tx.categoryColor">{{ tx.categoryName }}</BrutalBadge>
+              <p class="text-xs mt-1">{{ formatDate(tx.date) }} · {{ tx.note || '-' }}</p>
+            </div>
+            <div class="text-right">
+              <p class="font-black" :class="tx.amount >= 0 && tx.type !== 'expense' ? 'text-green-700' : 'text-brutal-red'">
+                {{ tx.type === 'expense' || tx.amount < 0 ? '-' : '+' }}{{ formatCurrency(Math.abs(tx.amount)) }}
+              </p>
+              <button class="text-xs font-bold uppercase underline mt-1" @click="remove(tx.id)">Hapus</button>
+            </div>
+          </BrutalCard>
+          <p v-if="!transactionsStore.pageItems.length" class="text-sm">Belum ada transaksi untuk wallet ini.</p>
+        </div>
+
+        <div v-if="transactionsStore.pageTotalPages > 1" class="flex items-center justify-between gap-3">
+          <BrutalButton
+            variant="ghost"
+            :disabled="transactionsStore.pageNumber <= 1"
+            @click="goToPage(transactionsStore.pageNumber - 1)"
+          >
+            ← Sebelumnya
+          </BrutalButton>
+          <p class="text-xs font-bold uppercase">
+            Halaman {{ transactionsStore.pageNumber }} dari {{ transactionsStore.pageTotalPages }}
+            ({{ transactionsStore.pageTotal }} transaksi)
+          </p>
+          <BrutalButton
+            variant="ghost"
+            :disabled="transactionsStore.pageNumber >= transactionsStore.pageTotalPages"
+            @click="goToPage(transactionsStore.pageNumber + 1)"
+          >
+            Berikutnya →
+          </BrutalButton>
+        </div>
       </div>
 
-      <div v-if="transactionsStore.pageTotalPages > 1" class="flex items-center justify-between gap-3 mt-4">
-        <BrutalButton
-          variant="ghost"
-          :disabled="transactionsStore.pageNumber <= 1"
-          @click="goToPage(transactionsStore.pageNumber - 1)"
-        >
-          ← Sebelumnya
-        </BrutalButton>
-        <p class="text-xs font-bold uppercase">
-          Halaman {{ transactionsStore.pageNumber }} dari {{ transactionsStore.pageTotalPages }}
-          ({{ transactionsStore.pageTotal }} transaksi)
-        </p>
-        <BrutalButton
-          variant="ghost"
-          :disabled="transactionsStore.pageNumber >= transactionsStore.pageTotalPages"
-          @click="goToPage(transactionsStore.pageNumber + 1)"
-        >
-          Berikutnya →
-        </BrutalButton>
-      </div>
-    </BrutalCard>
+      <div class="space-y-3">
+        <h2 class="font-black uppercase">Riwayat Transfer</h2>
+        <div class="space-y-2">
+          <BrutalCard v-for="t in transfersStore.pageItems" :key="t.id" class="flex items-center justify-between">
+            <div>
+              <p class="font-bold text-sm">
+                {{ t.fromWalletId === walletId ? `→ ${t.toWalletName}` : `${t.fromWalletName} →` }}
+              </p>
+              <p class="text-xs mt-1">{{ formatDate(t.date) }} · {{ t.note || '-' }}</p>
+            </div>
+            <div class="text-right">
+              <p class="font-black" :class="t.toWalletId === walletId ? 'text-green-700' : 'text-brutal-red'">
+                {{ t.toWalletId === walletId ? '+' : '-' }}{{ formatCurrency(t.amount) }}
+              </p>
+              <button class="text-xs font-bold uppercase underline mt-1" @click="removeTransfer(t.id)">Hapus</button>
+            </div>
+          </BrutalCard>
+          <p v-if="!transfersStore.pageItems.length" class="text-sm">Belum ada transfer untuk wallet ini.</p>
+        </div>
 
-    <BrutalCard>
-      <h2 class="font-black uppercase mb-3">Riwayat Transfer</h2>
-      <div class="space-y-2">
-        <BrutalCard v-for="t in transfersStore.pageItems" :key="t.id" class="flex items-center justify-between">
-          <div>
-            <p class="font-bold text-sm">
-              {{ t.fromWalletId === walletId ? `→ ${t.toWalletName}` : `${t.fromWalletName} →` }}
-            </p>
-            <p class="text-xs mt-1">{{ formatDate(t.date) }} · {{ t.note || '-' }}</p>
-          </div>
-          <div class="text-right">
-            <p class="font-black" :class="t.toWalletId === walletId ? 'text-green-700' : 'text-brutal-red'">
-              {{ t.toWalletId === walletId ? '+' : '-' }}{{ formatCurrency(t.amount) }}
-            </p>
-            <button class="text-xs font-bold uppercase underline mt-1" @click="removeTransfer(t.id)">Hapus</button>
-          </div>
-        </BrutalCard>
-        <p v-if="!transfersStore.pageItems.length" class="text-sm">Belum ada transfer untuk wallet ini.</p>
+        <div v-if="transfersStore.pageTotalPages > 1" class="flex items-center justify-between gap-3">
+          <BrutalButton
+            variant="ghost"
+            :disabled="transfersStore.pageNumber <= 1"
+            @click="goToTransferPage(transfersStore.pageNumber - 1)"
+          >
+            ← Sebelumnya
+          </BrutalButton>
+          <p class="text-xs font-bold uppercase">
+            Halaman {{ transfersStore.pageNumber }} dari {{ transfersStore.pageTotalPages }}
+            ({{ transfersStore.pageTotal }} transfer)
+          </p>
+          <BrutalButton
+            variant="ghost"
+            :disabled="transfersStore.pageNumber >= transfersStore.pageTotalPages"
+            @click="goToTransferPage(transfersStore.pageNumber + 1)"
+          >
+            Berikutnya →
+          </BrutalButton>
+        </div>
       </div>
-
-      <div v-if="transfersStore.pageTotalPages > 1" class="flex items-center justify-between gap-3 mt-4">
-        <BrutalButton
-          variant="ghost"
-          :disabled="transfersStore.pageNumber <= 1"
-          @click="goToTransferPage(transfersStore.pageNumber - 1)"
-        >
-          ← Sebelumnya
-        </BrutalButton>
-        <p class="text-xs font-bold uppercase">
-          Halaman {{ transfersStore.pageNumber }} dari {{ transfersStore.pageTotalPages }}
-          ({{ transfersStore.pageTotal }} transfer)
-        </p>
-        <BrutalButton
-          variant="ghost"
-          :disabled="transfersStore.pageNumber >= transfersStore.pageTotalPages"
-          @click="goToTransferPage(transfersStore.pageNumber + 1)"
-        >
-          Berikutnya →
-        </BrutalButton>
-      </div>
-    </BrutalCard>
     </div>
 
     <TransactionFormModal v-if="showTransactionModal" :wallet-id="walletId" @close="showTransactionModal = false" />

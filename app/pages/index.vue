@@ -92,8 +92,8 @@ function goToTransferPage(page: number) {
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <BrutalCard>
-        <h2 class="font-black uppercase mb-3">Transaksi Terbaru</h2>
+      <div class="space-y-3">
+        <h2 class="font-black uppercase">Transaksi Terbaru</h2>
         <div class="space-y-2">
           <BrutalCard v-for="tx in transactionsStore.pageItems" :key="tx.id" class="flex items-center justify-between">
             <div>
@@ -108,7 +108,7 @@ function goToTransferPage(page: number) {
           <p v-if="!transactionsStore.pageItems.length" class="text-sm">Belum ada transaksi.</p>
         </div>
 
-        <div v-if="transactionsStore.pageTotalPages > 1" class="flex items-center justify-between gap-3 mt-4">
+        <div v-if="transactionsStore.pageTotalPages > 1" class="flex items-center justify-between gap-3">
           <BrutalButton
             variant="ghost"
             :disabled="transactionsStore.pageNumber <= 1"
@@ -127,10 +127,10 @@ function goToTransferPage(page: number) {
             Berikutnya →
           </BrutalButton>
         </div>
-      </BrutalCard>
+      </div>
 
-      <BrutalCard>
-        <h2 class="font-black uppercase mb-3">Transfer Terbaru</h2>
+      <div class="space-y-3">
+        <h2 class="font-black uppercase">Transfer Terbaru</h2>
         <div class="space-y-2">
           <BrutalCard v-for="t in transfersStore.pageItems" :key="t.id" class="flex items-center justify-between">
             <div>
@@ -142,7 +142,7 @@ function goToTransferPage(page: number) {
           <p v-if="!transfersStore.pageItems.length" class="text-sm">Belum ada transfer.</p>
         </div>
 
-        <div v-if="transfersStore.pageTotalPages > 1" class="flex items-center justify-between gap-3 mt-4">
+        <div v-if="transfersStore.pageTotalPages > 1" class="flex items-center justify-between gap-3">
           <BrutalButton
             variant="ghost"
             :disabled="transfersStore.pageNumber <= 1"
@@ -161,7 +161,7 @@ function goToTransferPage(page: number) {
             Berikutnya →
           </BrutalButton>
         </div>
-      </BrutalCard>
+      </div>
     </div>
 
     <TransactionFormModal v-if="showTransactionModal" @close="showTransactionModal = false" />
