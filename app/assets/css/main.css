@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Archivo", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-brutal-bg: #fdf6e9;
+  --color-brutal-surface: #ffffff;
+  --color-brutal-ink: #111111;
+
+  --color-brutal-yellow: #ffd93d;
+  --color-brutal-pink: #ff6b9d;
+  --color-brutal-blue: #4d96ff;
+  --color-brutal-green: #6bcf7f;
+  --color-brutal-red: #ff5c5c;
+  --color-brutal-purple: #b592ff;
+}
+
+@utility brutal-border {
+  border: 3px solid var(--color-brutal-ink);
+}
+
+@utility brutal-shadow {
+  box-shadow: 5px 5px 0 0 var(--color-brutal-ink);
+}
+
+@utility brutal-shadow-sm {
+  box-shadow: 3px 3px 0 0 var(--color-brutal-ink);
+}
+
+@utility brutal-press {
+  transition: transform 100ms ease-out, box-shadow 100ms ease-out;
+
+  &:active {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 0 var(--color-brutal-ink);
+  }
+}
+
+@utility brutal-card {
+  @apply brutal-border brutal-shadow bg-brutal-surface rounded-none p-5;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-brutal-bg);
+    color: var(--color-brutal-ink);
+  }
+}
