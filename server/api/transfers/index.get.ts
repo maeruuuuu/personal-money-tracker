@@ -1,4 +1,4 @@
-import { desc, eq, or, sql } from 'drizzle-orm'
+import { and, desc, eq, like, or, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { useDb } from '../../db/client'
 import { transfers, wallets } from '../../db/schema'
@@ -10,9 +10,12 @@ export default defineEventHandler(async (event) => {
   const toWallet = alias(wallets, 'to_wallet')
 
   const walletId = query.walletId ? Number(query.walletId) : undefined
-  const whereClause = walletId
-    ? or(eq(transfers.fromWalletId, walletId), eq(transfers.toWalletId, walletId))
-    : undefined
+  const month = typeof query.month === 'string' && /^\d{4}-\d{2}$/.test(query.month) ? query.month : undefined
+  const conditions = [
+    walletId ? or(eq(transfers.fromWalletId, walletId), eq(transfers.toWalletId, walletId)) : undefined,
+    month ? like(transfers.date, `${month}-%`) : undefined
+  ].filter((c) => c !== undefined)
+  const whereClause = conditions.length ? and(...conditions) : undefined
 
   const baseQuery = () =>
     db

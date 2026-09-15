@@ -35,6 +35,7 @@ interface MonthlySummary {
 interface PageFilters {
   walletId?: number
   categoryId?: number
+  month?: string
 }
 
 export const useTransactionsStore = defineStore('transactions', {

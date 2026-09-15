@@ -20,6 +20,7 @@ interface PaginatedResponse {
 
 interface PageFilters {
   walletId?: number
+  month?: string
 }
 
 export const useTransfersStore = defineStore('transfers', {
@@ -77,6 +78,13 @@ export const useTransfersStore = defineStore('transfers', {
       const res = await useApi()<{ inserted: number }>('/api/transfers/bulk', { method: 'POST', body: { items } })
       await this.refresh()
       return res.inserted
+    },
+    async update(
+      id: number,
+      payload: Partial<{ fromWalletId: number; toWalletId: number; amount: number; note: string; date: string }>
+    ) {
+      await useApi()(`/api/transfers/${id}`, { method: 'PATCH', body: payload })
+      await this.refresh()
     },
     async remove(id: number) {
       await useApi()(`/api/transfers/${id}`, { method: 'DELETE' })

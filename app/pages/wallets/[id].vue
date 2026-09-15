@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Transfer } from '~/stores/transfers'
+
 const route = useRoute()
 const walletId = Number(route.params.id)
 
@@ -20,7 +22,18 @@ const wallet = computed(() => walletsStore.items.find((w) => w.id === walletId))
 
 const showTransactionModal = ref(false)
 const showTransferModal = ref(false)
+const editingTransfer = ref<Transfer | null>(null)
 const activeWalletCount = computed(() => walletsStore.items.filter((w) => w.status === 'active').length)
+
+function openCreateTransfer() {
+  editingTransfer.value = null
+  showTransferModal.value = true
+}
+
+function openEditTransfer(t: Transfer) {
+  editingTransfer.value = t
+  showTransferModal.value = true
+}
 
 async function remove(id: number) {
   if (!confirm('Hapus transaksi ini?')) return
@@ -66,7 +79,7 @@ function goToTransferPage(page: number) {
       <BrutalButton :disabled="!categoriesStore.items.length" @click="showTransactionModal = true">
         + Tambah Transaksi
       </BrutalButton>
-      <BrutalButton :disabled="activeWalletCount < 2" @click="showTransferModal = true">+ Transfer</BrutalButton>
+      <BrutalButton :disabled="activeWalletCount < 2" @click="openCreateTransfer">+ Transfer</BrutalButton>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -125,7 +138,10 @@ function goToTransferPage(page: number) {
               <p class="font-black" :class="t.toWalletId === walletId ? 'text-green-700' : 'text-brutal-red'">
                 {{ t.toWalletId === walletId ? '+' : '-' }}{{ formatCurrency(t.amount) }}
               </p>
-              <button class="text-xs font-bold uppercase underline mt-1" @click="removeTransfer(t.id)">Hapus</button>
+              <div class="flex gap-3 justify-end mt-1">
+                <button class="text-xs font-bold uppercase underline" @click="openEditTransfer(t)">Edit</button>
+                <button class="text-xs font-bold uppercase underline" @click="removeTransfer(t.id)">Hapus</button>
+              </div>
             </div>
           </BrutalCard>
           <p v-if="!transfersStore.pageItems.length" class="text-sm">Belum ada transfer untuk wallet ini.</p>
@@ -155,6 +171,11 @@ function goToTransferPage(page: number) {
     </div>
 
     <TransactionFormModal v-if="showTransactionModal" :wallet-id="walletId" @close="showTransactionModal = false" />
-    <TransferFormModal v-if="showTransferModal" :wallet-id="walletId" @close="showTransferModal = false" />
+    <TransferFormModal
+      v-if="showTransferModal"
+      :wallet-id="walletId"
+      :transfer="editingTransfer"
+      @close="showTransferModal = false"
+    />
   </div>
 </template>

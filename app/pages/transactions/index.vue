@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Transaction } from '~/stores/transactions'
+import type { Transfer } from '~/stores/transfers'
 
 const transactionsStore = useTransactionsStore()
 const transfersStore = useTransfersStore()
@@ -20,6 +21,7 @@ const activeTab = ref<'transaksi' | 'transfer'>('transaksi')
 const showModal = ref(false)
 const editingTransaction = ref<Transaction | null>(null)
 const showTransferModal = ref(false)
+const editingTransfer = ref<Transfer | null>(null)
 
 function openCreate() {
   editingTransaction.value = null
@@ -29,6 +31,16 @@ function openCreate() {
 function openEdit(tx: Transaction) {
   editingTransaction.value = tx
   showModal.value = true
+}
+
+function openCreateTransfer() {
+  editingTransfer.value = null
+  showTransferModal.value = true
+}
+
+function openEditTransfer(t: Transfer) {
+  editingTransfer.value = t
+  showTransferModal.value = true
 }
 
 async function remove(id: number) {
@@ -73,7 +85,7 @@ function goToTransferPage(page: number) {
         >
           + Tambah Transaksi
         </BrutalButton>
-        <BrutalButton v-else :disabled="walletsStore.items.length < 2" @click="showTransferModal = true">
+        <BrutalButton v-else :disabled="walletsStore.items.length < 2" @click="openCreateTransfer">
           + Transfer
         </BrutalButton>
       </div>
@@ -154,7 +166,10 @@ function goToTransferPage(page: number) {
           </div>
           <div class="text-right">
             <p class="font-black">{{ formatCurrency(t.amount) }}</p>
-            <button class="text-xs font-bold uppercase underline mt-1" @click="removeTransfer(t.id)">Hapus</button>
+            <div class="flex gap-3 justify-end mt-1">
+              <button class="text-xs font-bold uppercase underline" @click="openEditTransfer(t)">Edit</button>
+              <button class="text-xs font-bold uppercase underline" @click="removeTransfer(t.id)">Hapus</button>
+            </div>
           </div>
         </BrutalCard>
         <p v-if="!transfersStore.pageItems.length" class="text-sm">Belum ada transfer.</p>
@@ -183,6 +198,6 @@ function goToTransferPage(page: number) {
     </template>
 
     <TransactionFormModal v-if="showModal" :transaction="editingTransaction" @close="showModal = false" />
-    <TransferFormModal v-if="showTransferModal" @close="showTransferModal = false" />
+    <TransferFormModal v-if="showTransferModal" :transfer="editingTransfer" @close="showTransferModal = false" />
   </div>
 </template>
