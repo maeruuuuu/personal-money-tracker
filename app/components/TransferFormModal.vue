@@ -20,6 +20,10 @@ const walletOptions = computed(() => {
 
 const initialFromWalletId = props.transfer?.fromWalletId ?? props.walletId ?? activeWallets.value[0]?.id ?? 0
 
+function balanceFor(walletId: number) {
+  return walletsStore.items.find((w) => w.id === walletId)?.balance ?? 0
+}
+
 const form = reactive({
   fromWalletId: initialFromWalletId,
   toWalletId:
@@ -51,8 +55,14 @@ async function submit() {
 <template>
   <BrutalModal :title="isEditing ? 'Edit Transfer' : 'Transfer Antar Wallet'" @close="emit('close')">
     <form class="space-y-4" @submit.prevent="submit">
-      <BrutalSelect v-model="form.fromWalletId" label="Dari Wallet" :options="walletOptions" required />
-      <BrutalSelect v-model="form.toWalletId" label="Ke Wallet" :options="walletOptions" required />
+      <div>
+        <BrutalSelect v-model="form.fromWalletId" label="Dari Wallet" :options="walletOptions" required />
+        <p class="text-xs mt-1">Saldo: {{ formatCurrency(balanceFor(form.fromWalletId)) }}</p>
+      </div>
+      <div>
+        <BrutalSelect v-model="form.toWalletId" label="Ke Wallet" :options="walletOptions" required />
+        <p class="text-xs mt-1">Saldo: {{ formatCurrency(balanceFor(form.toWalletId)) }}</p>
+      </div>
       <BrutalInput v-model="form.amount" type="number" label="Jumlah (Rp)" min="1" required />
       <BrutalInput v-model="form.date" type="date" label="Tanggal" required />
       <BrutalInput v-model="form.note" label="Catatan (opsional)" />
