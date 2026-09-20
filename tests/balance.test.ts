@@ -58,4 +58,18 @@ describe('computeWalletBalance', () => {
     )
     expect(lower).toBe(80000)
   })
+
+  it('subtracts idol expenses paid from this wallet, ignoring other wallets and point-paid ones', () => {
+    const balance = computeWalletBalance(
+      { id: 1, initialBalance: 100000 },
+      [],
+      [],
+      [
+        { walletId: 1, amount: 15000 },
+        { walletId: 2, amount: 999999 },
+        { walletId: null, amount: 5000 }
+      ]
+    )
+    expect(balance).toBe(85000)
+  })
 })

@@ -40,3 +40,22 @@ export const transfers = sqliteTable('transfers', {
   date: text('date').notNull(),
   createdAt: text('created_at').notNull().default(sql`(current_timestamp)`)
 })
+
+export const idolExpenses = sqliteTable('idol_expenses', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  category: text('category', { enum: ['2S', 'MnG', 'VC', 'Rulet', 'Theater'] }).notNull(),
+  amount: real('amount').notNull(),
+  note: text('note').notNull().default(''),
+  date: text('date').notNull(),
+  paymentMethod: text('payment_method', { enum: ['point', 'wallet'] }).notNull(),
+  walletId: integer('wallet_id').references(() => wallets.id, { onDelete: 'cascade' }),
+  createdAt: text('created_at').notNull().default(sql`(current_timestamp)`)
+})
+
+export const idolTopups = sqliteTable('idol_topups', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  amount: real('amount').notNull(),
+  note: text('note').notNull().default(''),
+  date: text('date').notNull(),
+  createdAt: text('created_at').notNull().default(sql`(current_timestamp)`)
+})

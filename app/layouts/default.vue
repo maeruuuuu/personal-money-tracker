@@ -6,7 +6,8 @@ const navItems = [
   { to: '/wallets', label: 'Wallets' },
   { to: '/categories', label: 'Kategori' },
   { to: '/transactions', label: 'Transaksi' },
-  { to: '/report', label: 'Laporan' }
+  { to: '/report', label: 'Laporan' },
+  { to: '/idol', label: 'Idol' }
 ]
 
 async function logout() {

@@ -30,3 +30,16 @@ export const transferBodySchema = z
   .refine((data) => data.fromWalletId !== data.toWalletId, {
     message: 'Wallet asal dan tujuan tidak boleh sama'
   })
+
+export const idolExpenseBodySchema = z
+  .object({
+    category: z.enum(['2S', 'MnG', 'VC', 'Rulet', 'Theater']),
+    amount: z.number().positive(),
+    note: z.string().max(200).default(''),
+    date: z.string().min(1),
+    paymentMethod: z.enum(['point', 'wallet']),
+    walletId: z.number().int().nullable().optional()
+  })
+  .refine((data) => (data.paymentMethod === 'wallet') === (data.walletId != null), {
+    message: 'Wallet wajib diisi untuk metode wallet, dan tidak boleh diisi untuk metode point'
+  })
